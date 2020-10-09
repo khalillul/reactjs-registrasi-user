@@ -20,7 +20,8 @@ class FormRegister extends Component{
           blur:false,
           resultSave:false,
           disableBtnReg:'',
-          successSubmit:true,
+          successSubmit:false,
+          displayValidPhone :true,
           genderOptions: ['Male', 'Female'],    
         }
         this.handleDate = this.handleDate.bind(this);
@@ -29,7 +30,7 @@ class FormRegister extends Component{
         this.handleInput = this.handleInput.bind(this);
         this.handleOptionRadio = this.handleOptionRadio.bind(this);
         this.handlePhoneValidate = this.handlePhoneValidate.bind(this);
-        
+        this.handleShowMsg = this.handleShowMsg.bind(this);
       }
 
        handleInput(e) {
@@ -39,6 +40,8 @@ class FormRegister extends Component{
              {...prevState.newUser, [name]: value
              }
            }), () => console.log(this.state.newUser))
+        
+           this.setState({ displayValidPhone:true });
        }
 
         handleOptionRadio(es) {
@@ -87,17 +90,37 @@ class FormRegister extends Component{
         }
         handlePhoneValidate(pn){
             let isValid =true;
-
             if (typeof pn !== "undefined") {
-                var pattern = new RegExp(/^[0-9\b]+$/);
+                let code = pn.substring(0,3);
+                var pattern = new RegExp(/^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s/0-9]*$/g);
                 if (!pattern.test(pn)) {
                     isValid = false;
-                }else if(pn.length !== 10){
+                    this.setState({ displayValidPhone:false });
+                }else if(code !== "+62"){
                     isValid = false;
+                    this.setState({ displayValidPhone:false });
+                } 
+                else if( 12 > pn.length > 14){
+                    isValid = false;
+                    this.setState({ displayValidPhone:false });
                 }
             }
 
+            this.handleShowMsg();
             return isValid;
+        }
+
+        handleShowMsg(){
+            if(!this.state.displayValidPhone){
+                return(
+                    <div className="tooltip">
+                        <span className="tooltiptext">Please enter valid Indonesia phone number (+628xxxx)</span>
+                    </div>
+                );
+            }
+            return(
+                <div></div>
+            );
         }
 
         handleBtnLogin(){
@@ -109,17 +132,24 @@ class FormRegister extends Component{
                 );
             }
             return(<div></div>);
-            
         }
+
        handleFormSubmit(e) {
          e.preventDefault();
          let userData = this.state.newUser;
          let isValid = this.handlePhoneValidate(this.state.newUser.phoneNumber);
          
-         this.setState({ blur:true });
-         this.setState({ disableBtnReg:'disabled' });
+         
         
         if(isValid){
+            if(!this.state.displayValidPhone){
+                return;
+
+            }else{
+                this.setState({ blur:true });
+                this.setState({ disableBtnReg:'disabled' });
+            }
+
             fetch('http://localhost:8080/user/',{
                 method: "POST",
                 body: JSON.stringify(userData),
@@ -130,12 +160,13 @@ class FormRegister extends Component{
             }).then(response => {
                 response.json().then(res =>{
                     this.setState({ successSubmit:true });
-                console.log("Successful" + res.data);
+                    console.log("Successful" + res);
                 })
             })
-        }else{
-            alert("please enter indonesia phone number");
         }
+        // else{
+        //     alert("please enter indonesia phone number");
+        // }
          
        }   
 
@@ -177,7 +208,7 @@ class FormRegister extends Component{
              <div className={this.state.blur?'App-grey':''}>
              <form onSubmit={this.handleFormSubmit} className="App-form">
                  <h2>Registration</h2>
-
+                {this.handleShowMsg()}
                 <input type='tel'
                     name= 'phoneNumber'
                     value={this.state.newUser.phoneNumber} 
