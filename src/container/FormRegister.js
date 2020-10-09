@@ -127,9 +127,10 @@ class FormRegister extends Component{
             if(this.state.successSubmit){
                 return(
                     <div className="App-btn-login">
-                        <button>Login</button>
+                        <a href="/login"><button>Login</button></a>
                     </div>
                 );
+                
             }
             return(<div></div>);
         }
